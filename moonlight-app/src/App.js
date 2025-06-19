@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Plus, X, Users, ClipboardList, BarChart2, ArrowLeft, Trash2, Edit, Save, Moon, FolderDown, Eraser, FlagOff, ChevronRight } from 'lucide-react';
 
@@ -49,6 +50,7 @@ export default function App() {
         if (screen === 'game' && roster.length < 7) { alert("Please add at least 7 players to the roster before starting a game."); return; }
         if (screen === 'game') { setCurrentScreen('game_hub'); return; }
         if (screen === 'view_game') { setGame(context); setActivePointIndex(0); setCurrentScreen('game'); return; }
+        if (screen === 'stats') { setGame(context); setCurrentScreen('stats'); return; }
         setCurrentScreen(screen);
     };
 
@@ -112,6 +114,14 @@ const NavButton = ({ icon, label, isActive, onClick }) => (
         {icon} <span className="font-semibold tracking-wider">{label}</span>
     </button>
 );
+const PlayerTag = ({ player }) => {
+    const genderStyle = player.gender === 'MMP' ? 'bg-blue-500/10' : 'bg-pink-500/10';
+    const roleColors = { Handler: 'text-green-400', Cutter: 'text-purple-400', Hybrid: 'text-orange-400' };
+    return (<div className={`p-2 rounded-lg flex justify-between items-center ${genderStyle}`}>
+        <span className="font-medium text-gray-200">{player.name}</span>
+        <span className={`text-xs font-bold ${roleColors[player.role]}`}>{player.role.toUpperCase()}</span>
+    </div>);
+};
 const SwipeButton = ({ onConfirm }) => {
     const [progress, setProgress] = useState(0);
     const [confirmed, setConfirmed] = useState(false);
@@ -453,7 +463,9 @@ function LineSelector({ point, game, onLineSet, navigateTo, onEndGame }) {
     return (
         <div className="space-y-6">
             <h4 className="font-semibold tracking-wider">Line for Point {point.pointNumber}:</h4>
-            {currentLine.length > 0 ? (<div className="space-y-2">{currentLine.map(player => (<div key={player.id} className="bg-gray-800 border border-gray-700/80 rounded-lg flex justify-between items-center"><div className="flex-grow"><PlayerTag player={player} /></div><button onClick={() => setPlayerToSwap(player)} className="ml-2 px-3 py-1 text-sm rounded-md bg-yellow-500/20 border border-yellow-400/50 text-yellow-300 hover:bg-yellow-400 hover:text-gray-900 transition-colors">Swap</button></div>))}</div>) : null }
+            {currentLine.length > 0 ? (<div className="space-y-2">{currentLine.map(player => (<div key={player.id} className="bg-gray-800 border border-gray-700/80 rounded-lg flex justify-between items-center p-2">
+                <span className="font-medium">{player.name}</span><span className="text-xs text-gray-500 ml-2">{player.gender} / {player.role}</span>
+            <button onClick={() => setPlayerToSwap(player)} className="ml-2 px-3 py-1 text-sm rounded-md bg-yellow-500/20 border border-yellow-400/50 text-yellow-300 hover:bg-yellow-400 hover:text-gray-900 transition-colors">Swap</button></div>))}</div>) : null }
             {isFatalError && (<div className="text-center p-3 bg-red-900/50 border border-red-500/50 rounded-lg"><p className="font-semibold text-red-400">{lineError}</p>{lineError.includes("Roster lacks") && <button onClick={() => navigateTo('roster')} className="mt-2 px-3 py-1 text-sm bg-red-500 text-white rounded-lg shadow">Go to Roster</button>}</div>)}
             {lineError && lineError.startsWith('Warning') && (<div className="text-center p-3 bg-yellow-900/50 border border-yellow-500/50 rounded-lg"><p className="font-semibold text-yellow-400">{lineError}</p></div>)}
             <div className="flex space-x-2 pt-4 border-t border-gray-700/50">
@@ -487,15 +499,15 @@ function ScoreTracker({ point, pointIndex, game, onMoonlightScore, onOpponentSco
             </div>
              <div className="grid grid-cols-1 gap-2">
                 {point.line.map(player => (
-                    <div key={player.id} className="bg-gray-800 border border-gray-700/80 rounded-lg flex justify-between items-center">
-                        <div className="flex-grow"><PlayerTag player={player} /></div>
+                    <div key={player.id} className="bg-gray-800 border border-gray-700/80 rounded-lg flex justify-between items-center p-2">
+                        <span className="font-medium">{player.name}</span>
                         {(isCurrentPoint || isEditing) ? (
-                             <div className="flex space-x-2 p-2">
+                             <div className="flex space-x-2">
                                 <button onClick={() => handleSelect(player.id, 'assist')} className={`px-4 py-2 text-sm rounded-lg ${selectedAssist === player.id ? 'bg-green-400 text-gray-900 font-bold' : 'bg-gray-700'}`}>Assist</button>
                                 <button onClick={() => handleSelect(player.id, 'goal')} className={`px-4 py-2 text-sm rounded-lg ${selectedGoal === player.id ? 'bg-yellow-400 text-gray-900 font-bold' : 'bg-gray-700'}`}>Goal</button>
                             </div>
                         ) : (
-                             <div className="flex space-x-2 p-2">
+                             <div className="flex space-x-2">
                                 {point.assist === player.id && <span className="px-3 py-1 text-sm font-bold text-green-300 bg-green-500/20 rounded-full">ASSIST</span>}
                                 {point.goal === player.id && <span className="px-3 py-1 text-sm font-bold text-yellow-300 bg-yellow-500/20 rounded-full">GOAL</span>}
                             </div>
