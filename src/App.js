@@ -12,7 +12,7 @@ const getAbbaInfoForPoint = (pointNumber, aGender) => {
         4: { gender: 'A', num: 1 }
     };
     const cycle = Math.floor((pointNumber - 1) / 4);
-    const pointInCycle = (pointNumber - 1) % 7 + 1;
+    const pointInCycle = (pointNumber - 1) % 4 + 1;
     const pointInfo = customSequence[pointInCycle];
     let displayGender = pointInfo.gender === 'A' ? aGender : bGender;
     if(cycle % 2 !== 0){ displayGender = displayGender === aGender ? bGender : aGender; }
