@@ -5,17 +5,9 @@ import { Plus, X, Users, ClipboardList, BarChart2, ArrowLeft, Trash2, Edit, Save
 // --- Helper Functions ---
 const generateId = () => `id_${new Date().getTime()}_${Math.random().toString(36).substr(2, 9)}`;
 
-const ABBA_PATTERN = ['A', 'B', 'B', 'A', 'A', 'B', 'B'];
 const getAbbaInfoForPoint = (pointNumber, aGender) => {
     const bGender = aGender === 'MMP' ? 'FMP' : 'MMP';
-    const customSequence = {
-        1: { gender: 'A', num: 2 }, 2: { gender: 'B', num: 1 }, 3: { gender: 'B', num: 2 },
-        4: { gender: 'A', num: 1 }, 5: { gender: 'A', num: 2 }, 6: { gender: 'B', num: 1 },
-        7: { gender: 'B', num: 2 }
-    };
     const cycle = Math.floor((pointNumber - 1) / 7);
-    const pointInCycle = (pointNumber - 1) % 7 + 1;
-    const pointInfo = customSequence[pointInCycle];
     let displayGender = pointInfo.gender === 'A' ? aGender : bGender;
     if(cycle % 2 !== 0){ displayGender = displayGender === aGender ? bGender : aGender; }
     return {
