@@ -15,7 +15,7 @@ const getAbbaInfoForPoint = (pointNumber, aGender) => {
     const pointInCycle = (pointNumber - 1) % 4 + 1;
     const pointInfo = customSequence[pointInCycle];
     let displayGender = pointInfo.gender === 'A' ? aGender : bGender;
-    if(cycle % 2 !== 0){ displayGender = displayGender === aGender ? bGender : aGender; }
+
     return {
         label: `${displayGender} ${pointInfo.num}`,
         majorityGender: displayGender,
