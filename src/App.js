@@ -7,7 +7,13 @@ const generateId = () => `id_${new Date().getTime()}_${Math.random().toString(36
 
 const getAbbaInfoForPoint = (pointNumber, aGender) => {
     const bGender = aGender === 'MMP' ? 'FMP' : 'MMP';
-    const cycle = Math.floor((pointNumber - 1) / 7);
+    const customSequence = {
+        1: { gender: 'A', num: 2 }, 2: { gender: 'B', num: 1 }, 3: { gender: 'B', num: 2 },
+        4: { gender: 'A', num: 1 }
+    };
+    const cycle = Math.floor((pointNumber - 1) / 4);
+    const pointInCycle = (pointNumber - 1) % 7 + 1;
+    const pointInfo = customSequence[pointInCycle];
     let displayGender = pointInfo.gender === 'A' ? aGender : bGender;
     if(cycle % 2 !== 0){ displayGender = displayGender === aGender ? bGender : aGender; }
     return {
