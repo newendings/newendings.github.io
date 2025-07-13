@@ -46,9 +46,17 @@ export default function App() {
 
     const navigateTo = (screen, context = null) => {
         if (screen === 'game' && roster.length < 7) { alert("Please add at least 7 players to the roster before starting a game."); return; }
-        if (screen === 'game') { setCurrentScreen('game_hub'); return; }
+        if (screen === 'game') { 
+            // If there's an active game, go to it; otherwise go to game hub
+            if (game && !game.isComplete) {
+                setCurrentScreen('game');
+            } else {
+                setCurrentScreen('game_hub');
+            }
+            return; 
+        }
         if (screen === 'view_game') { setGame(context); setActivePointIndex(0); setCurrentScreen('game'); return; }
-        if (screen === 'stats') { setGame(context); setCurrentScreen('stats'); return; }
+        if (screen === 'stats') { setCurrentScreen('stats'); return; }
         setCurrentScreen(screen);
     };
 
