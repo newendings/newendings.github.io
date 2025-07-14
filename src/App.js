@@ -411,7 +411,7 @@ function PointDetails({ point, pointIndex, game, onLineSet, onMoonlightScore, on
                 <h3 className="text-lg font-semibold tracking-wider">Point {point.pointNumber}</h3>
                 <div className="flex items-center space-x-2">
                     {point.triggeredHalftime && (
-                        <span className="px-3 py-1 text-sm font-bold rounded-full bg-yellow-400/20 text-yellow-300">HALF</span>
+                        <span className="px-3 py-1 text-sm font-bold rounded-full bg-blue-400/20 text-blue-300">Last point of Half</span>
                     )}
                      <span className={`px-3 py-1 text-sm font-bold rounded-full ${abbaLabelStyle}`}>{point.abbaInfo.label}</span>
                     <span className={`px-3 py-1 text-sm font-bold rounded-full ${point.startingOn === 'Offense' ? 'bg-green-500/20 text-green-300' : 'bg-yellow-500/20 text-yellow-300'}`}>{point.startingOn}</span>
