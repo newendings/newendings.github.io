@@ -533,25 +533,24 @@ function ScoreTracker({ point, pointIndex, game, onMoonlightScore, onOpponentSco
             </div>
             {isCurrentPoint && (
                 <div className="pt-4 border-t border-gray-700/50">
-                    {/* Manual Halftime Checkbox */}
-                    {!game.isHalftime && (
-                        <div className="mb-4">
-                            <label className="flex items-center space-x-3 cursor-pointer">
-                                <input 
-                                    type="checkbox" 
-                                    checked={triggerHalftimeOnNextScore} 
-                                    onChange={(e) => setTriggerHalftimeOnNextScore(e.target.checked)}
-                                    className="w-4 h-4 text-yellow-400 bg-gray-700 border-gray-600 rounded focus:ring-yellow-400 focus:ring-2"
-                                />
-                                <span className="text-sm font-medium text-gray-300">
-                                    Next score will trigger halftime
-                                </span>
-                            </label>
-                        </div>
-                    )}
-                    
-                    {/* Scoring Buttons */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Scoring Buttons with Halftime Toggle */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* Halftime Toggle Button */}
+                        {!game.isHalftime ? (
+                            <KdaButton 
+                                onClick={() => setTriggerHalftimeOnNextScore(!triggerHalftimeOnNextScore)}
+                                className={`!py-3 ${triggerHalftimeOnNextScore 
+                                    ? 'bg-yellow-400 text-gray-900 border-yellow-400' 
+                                    : 'bg-yellow-400/10 border-yellow-400 text-yellow-300 hover:bg-yellow-400 hover:text-gray-900'
+                                }`}
+                            >
+                                HALF
+                            </KdaButton>
+                        ) : (
+                            <div></div>
+                        )}
+                        
+                        {/* Scoring Buttons */}
                         <KdaButton onClick={handleConfirmScore} className="!py-3 bg-green-500/10 border-green-400 text-green-300 hover:bg-green-400 hover:text-gray-900" disabled={!selectedGoal || !selectedAssist}>Moonlight Score</KdaButton>
                         <KdaButton onClick={onOpponentScore} className="!py-3 bg-red-500/10 border-red-400 text-red-300 hover:bg-red-400 hover:text-white">Opponent Scored</KdaButton>
                     </div>
