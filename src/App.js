@@ -331,6 +331,8 @@ function GameSetupScreen({ onStartGame, onBack }) {
 }
 
 function LiveGameScreen({ game, setGame, activePointIndex, setActivePointIndex, navigateTo, onEndGame }) {
+    const [triggerHalftimeOnNextScore, setTriggerHalftimeOnNextScore] = useState(false);
+    
     if (!game) return (<div className="text-center p-6 bg-gray-800/50 rounded-lg"><p>No game selected.</p><button onClick={() => navigateTo('game_hub')} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg">Go to Game Hub</button></div>);
     const currentPoint = game.points[activePointIndex];
     const updatePointData = (index, data, shouldNotRecalculateScore) => {
@@ -344,7 +346,11 @@ function LiveGameScreen({ game, setGame, activePointIndex, setActivePointIndex, 
         const newMoonlightScore = game.moonlightScore + 1; const newPoints = [...game.points];
         newPoints[activePointIndex] = { ...newPoints[activePointIndex], outcome: 'Moonlight Score', goal: scorerId, assist: assisterId };
         if (newMoonlightScore >= 15) { onEndGame({ ...game, points: newPoints, moonlightScore: newMoonlightScore }, "Score limit reached"); return; }
-        let isHalftime = game.isHalftime; if (!isHalftime && (newMoonlightScore >= 8 || game.opponentScore >= 8)) { isHalftime = true; }
+        let isHalftime = game.isHalftime; 
+        if (!isHalftime && (newMoonlightScore >= 8 || game.opponentScore >= 8 || triggerHalftimeOnNextScore)) { 
+            isHalftime = true; 
+            setTriggerHalftimeOnNextScore(false); // Reset the manual trigger
+        }
         const nextPointNumber = game.points.length + 1; const nextAbbaInfo = getAbbaInfoForPoint(nextPointNumber, game.aGender);
         let nextStartingOn = 'Defense'; if (isHalftime && !game.isHalftime) { nextStartingOn = game.initialOffense === 'Moonlight' ? 'Defense' : 'Offense'; }
         const nextPoint = { pointNumber: nextPointNumber, startingOn: nextStartingOn, line: [], outcome: 'In Progress', assist: null, goal: null, abbaInfo: nextAbbaInfo };
@@ -355,7 +361,11 @@ function LiveGameScreen({ game, setGame, activePointIndex, setActivePointIndex, 
         const newOpponentScore = game.opponentScore + 1; const newPoints = [...game.points];
         newPoints[activePointIndex] = { ...newPoints[activePointIndex], outcome: 'Opponent Score' };
         if (newOpponentScore >= 15) { onEndGame({ ...game, points: newPoints, opponentScore: newOpponentScore }, "Score limit reached"); return; }
-        let isHalftime = game.isHalftime; if (!isHalftime && (game.moonlightScore >= 8 || newOpponentScore >= 8)) { isHalftime = true; }
+        let isHalftime = game.isHalftime; 
+        if (!isHalftime && (game.moonlightScore >= 8 || newOpponentScore >= 8 || triggerHalftimeOnNextScore)) { 
+            isHalftime = true; 
+            setTriggerHalftimeOnNextScore(false); // Reset the manual trigger
+        }
         const nextPointNumber = game.points.length + 1; const nextAbbaInfo = getAbbaInfoForPoint(nextPointNumber, game.aGender);
         let nextStartingOn = 'Offense'; if (isHalftime && !game.isHalftime) { nextStartingOn = game.initialOffense === 'Moonlight' ? 'Defense' : 'Offense'; }
         const nextPoint = { pointNumber: nextPointNumber, startingOn: nextStartingOn, line: [], outcome: 'In Progress', assist: null, goal: null, abbaInfo: nextAbbaInfo };
@@ -372,7 +382,7 @@ function LiveGameScreen({ game, setGame, activePointIndex, setActivePointIndex, 
                     <button key={index} onClick={() => setActivePointIndex(index)} className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${index === activePointIndex ? 'bg-cyan-400 text-gray-900' : 'bg-gray-800 text-gray-400'}`}>Pt {p.pointNumber}</button>
                 ))}
             </div>
-            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 p-6 rounded-lg shadow-lg"><PointDetails point={currentPoint} pointIndex={activePointIndex} game={game} onLineSet={handleLineSet} onMoonlightScore={handleScore} onOpponentScore={handleOpponentScore} onUpdatePoint={updatePointData} navigateTo={navigateTo} onEndGame={onEndGame} /></div>
+            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 p-6 rounded-lg shadow-lg"><PointDetails point={currentPoint} pointIndex={activePointIndex} game={game} onLineSet={handleLineSet} onMoonlightScore={handleScore} onOpponentScore={handleOpponentScore} onUpdatePoint={updatePointData} navigateTo={navigateTo} onEndGame={onEndGame} triggerHalftimeOnNextScore={triggerHalftimeOnNextScore} setTriggerHalftimeOnNextScore={setTriggerHalftimeOnNextScore} /></div>
              {game.isComplete && <button onClick={() => navigateTo('game_hub')} className="w-full mt-4 py-3 bg-gray-700 text-white font-bold rounded-lg shadow-lg hover:bg-gray-600 tracking-wider">Back to Game Hub</button>}
         </div>
     );
@@ -380,7 +390,7 @@ function LiveGameScreen({ game, setGame, activePointIndex, setActivePointIndex, 
 
 // --- Point-level Components ---
 const Scoreboard = ({ moonlightScore, opponentScore, opponentName }) => (<div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 p-6 rounded-lg shadow-lg flex justify-around items-center text-center"><div className="w-1/3"><h3 className="text-lg font-bold text-cyan-400 tracking-widest">MOONLIGHT</h3><p className="text-5xl font-extrabold text-white">{moonlightScore}</p></div><div className="w-1/3 text-2xl font-bold text-gray-600">vs</div><div className="w-1/3"><h3 className="text-lg font-bold text-red-400 tracking-widest">{opponentName.toUpperCase()}</h3><p className="text-5xl font-extrabold text-white">{opponentScore}</p></div></div>);
-function PointDetails({ point, pointIndex, game, onLineSet, onMoonlightScore, onOpponentScore, onUpdatePoint, navigateTo, onEndGame }) {
+function PointDetails({ point, pointIndex, game, onLineSet, onMoonlightScore, onOpponentScore, onUpdatePoint, navigateTo, onEndGame, triggerHalftimeOnNextScore, setTriggerHalftimeOnNextScore }) {
     if(!point) return null;
     const abbaLabelStyle = point.abbaInfo.majorityGender === 'MMP' ? 'bg-blue-500/20 text-blue-300' : 'bg-pink-500/20 text-pink-300';
     return (
@@ -392,7 +402,7 @@ function PointDetails({ point, pointIndex, game, onLineSet, onMoonlightScore, on
                     <span className={`px-3 py-1 text-sm font-bold rounded-full ${point.startingOn === 'Offense' ? 'bg-green-500/20 text-green-300' : 'bg-yellow-500/20 text-yellow-300'}`}>{point.startingOn}</span>
                 </div>
             </div>
-            {point.line.length === 0 && !game.isComplete ? <LineSelector point={point} game={game} onLineSet={onLineSet} navigateTo={navigateTo} onEndGame={onEndGame} /> : <ScoreTracker point={point} pointIndex={pointIndex} game={game} onMoonlightScore={onMoonlightScore} onOpponentScore={onOpponentScore} onUpdatePoint={onUpdatePoint} />}
+            {point.line.length === 0 && !game.isComplete ? <LineSelector point={point} game={game} onLineSet={onLineSet} navigateTo={navigateTo} onEndGame={onEndGame} /> : <ScoreTracker point={point} pointIndex={pointIndex} game={game} onMoonlightScore={onMoonlightScore} onOpponentScore={onOpponentScore} onUpdatePoint={onUpdatePoint} triggerHalftimeOnNextScore={triggerHalftimeOnNextScore} setTriggerHalftimeOnNextScore={setTriggerHalftimeOnNextScore} />}
         </div>
     );
 }
@@ -482,7 +492,7 @@ function LineSelector({ point, game, onLineSet, navigateTo, onEndGame }) {
     );
 }
 
-function ScoreTracker({ point, pointIndex, game, onMoonlightScore, onOpponentScore, onUpdatePoint }) {
+function ScoreTracker({ point, pointIndex, game, onMoonlightScore, onOpponentScore, onUpdatePoint, triggerHalftimeOnNextScore, setTriggerHalftimeOnNextScore }) {
     const [selectedGoal, setSelectedGoal] = useState(point.goal);
     const [selectedAssist, setSelectedAssist] = useState(point.assist);
     const [isEditing, setIsEditing] = useState(false);
@@ -521,7 +531,32 @@ function ScoreTracker({ point, pointIndex, game, onMoonlightScore, onOpponentSco
                     </div>
                 ))}
             </div>
-            {isCurrentPoint && (<div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-700/50"><KdaButton onClick={handleConfirmScore} className="!py-3 bg-green-500/10 border-green-400 text-green-300 hover:bg-green-400 hover:text-gray-900" disabled={!selectedGoal || !selectedAssist}>Moonlight Score</KdaButton><KdaButton onClick={onOpponentScore} className="!py-3 bg-red-500/10 border-red-400 text-red-300 hover:bg-red-400 hover:text-white">Opponent Scored</KdaButton></div>)}
+            {isCurrentPoint && (
+                <div className="pt-4 border-t border-gray-700/50">
+                    {/* Manual Halftime Checkbox */}
+                    {!game.isHalftime && (
+                        <div className="mb-4">
+                            <label className="flex items-center space-x-3 cursor-pointer">
+                                <input 
+                                    type="checkbox" 
+                                    checked={triggerHalftimeOnNextScore} 
+                                    onChange={(e) => setTriggerHalftimeOnNextScore(e.target.checked)}
+                                    className="w-4 h-4 text-yellow-400 bg-gray-700 border-gray-600 rounded focus:ring-yellow-400 focus:ring-2"
+                                />
+                                <span className="text-sm font-medium text-gray-300">
+                                    Next score will trigger halftime
+                                </span>
+                            </label>
+                        </div>
+                    )}
+                    
+                    {/* Scoring Buttons */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <KdaButton onClick={handleConfirmScore} className="!py-3 bg-green-500/10 border-green-400 text-green-300 hover:bg-green-400 hover:text-gray-900" disabled={!selectedGoal || !selectedAssist}>Moonlight Score</KdaButton>
+                        <KdaButton onClick={onOpponentScore} className="!py-3 bg-red-500/10 border-red-400 text-red-300 hover:bg-red-400 hover:text-white">Opponent Scored</KdaButton>
+                    </div>
+                </div>
+            )}
             {isEditing && (<div className="pt-4 border-t border-gray-700/50"><KdaButton onClick={handleSaveChanges} className="w-full !py-3 bg-yellow-400/10 border-yellow-400 text-yellow-300 hover:bg-yellow-400 hover:text-gray-900">Save Changes</KdaButton></div>)}
             {point.outcome !== 'In Progress' && !isCurrentPoint && !isEditing && (<div className="p-4 text-center bg-gray-900 rounded-lg"><p className="font-bold text-lg tracking-wider">{point.outcome === 'Moonlight Score' ? `Moonlight Scored!` : `${game.opponentName} Scored`}</p></div>)}
         </div>
