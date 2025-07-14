@@ -347,9 +347,15 @@ function LiveGameScreen({ game, setGame, activePointIndex, setActivePointIndex, 
         newPoints[activePointIndex] = { ...newPoints[activePointIndex], outcome: 'Moonlight Score', goal: scorerId, assist: assisterId };
         if (newMoonlightScore >= 15) { onEndGame({ ...game, points: newPoints, moonlightScore: newMoonlightScore }, "Score limit reached"); return; }
         let isHalftime = game.isHalftime; 
+        let triggeredHalftime = false;
         if (!isHalftime && (newMoonlightScore >= 8 || game.opponentScore >= 8 || triggerHalftimeOnNextScore)) { 
             isHalftime = true; 
+            triggeredHalftime = true;
             setTriggerHalftimeOnNextScore(false); // Reset the manual trigger
+        }
+        // Mark this point as having triggered halftime
+        if (triggeredHalftime) {
+            newPoints[activePointIndex] = { ...newPoints[activePointIndex], triggeredHalftime: true };
         }
         const nextPointNumber = game.points.length + 1; const nextAbbaInfo = getAbbaInfoForPoint(nextPointNumber, game.aGender);
         let nextStartingOn = 'Defense'; if (isHalftime && !game.isHalftime) { nextStartingOn = game.initialOffense === 'Moonlight' ? 'Defense' : 'Offense'; }
@@ -362,9 +368,15 @@ function LiveGameScreen({ game, setGame, activePointIndex, setActivePointIndex, 
         newPoints[activePointIndex] = { ...newPoints[activePointIndex], outcome: 'Opponent Score' };
         if (newOpponentScore >= 15) { onEndGame({ ...game, points: newPoints, opponentScore: newOpponentScore }, "Score limit reached"); return; }
         let isHalftime = game.isHalftime; 
+        let triggeredHalftime = false;
         if (!isHalftime && (game.moonlightScore >= 8 || newOpponentScore >= 8 || triggerHalftimeOnNextScore)) { 
             isHalftime = true; 
+            triggeredHalftime = true;
             setTriggerHalftimeOnNextScore(false); // Reset the manual trigger
+        }
+        // Mark this point as having triggered halftime
+        if (triggeredHalftime) {
+            newPoints[activePointIndex] = { ...newPoints[activePointIndex], triggeredHalftime: true };
         }
         const nextPointNumber = game.points.length + 1; const nextAbbaInfo = getAbbaInfoForPoint(nextPointNumber, game.aGender);
         let nextStartingOn = 'Offense'; if (isHalftime && !game.isHalftime) { nextStartingOn = game.initialOffense === 'Moonlight' ? 'Defense' : 'Offense'; }
@@ -398,6 +410,9 @@ function PointDetails({ point, pointIndex, game, onLineSet, onMoonlightScore, on
             <div className="flex justify-between items-center pb-4 border-b border-gray-700/50">
                 <h3 className="text-lg font-semibold tracking-wider">Point {point.pointNumber}</h3>
                 <div className="flex items-center space-x-2">
+                    {point.triggeredHalftime && (
+                        <span className="px-3 py-1 text-sm font-bold rounded-full bg-yellow-400/20 text-yellow-300">HALF</span>
+                    )}
                      <span className={`px-3 py-1 text-sm font-bold rounded-full ${abbaLabelStyle}`}>{point.abbaInfo.label}</span>
                     <span className={`px-3 py-1 text-sm font-bold rounded-full ${point.startingOn === 'Offense' ? 'bg-green-500/20 text-green-300' : 'bg-yellow-500/20 text-yellow-300'}`}>{point.startingOn}</span>
                 </div>
