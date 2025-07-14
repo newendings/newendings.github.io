@@ -534,20 +534,18 @@ function ScoreTracker({ point, pointIndex, game, onMoonlightScore, onOpponentSco
             {isCurrentPoint && (
                 <div className="pt-4 border-t border-gray-700/50">
                     {/* Scoring Buttons with Halftime Toggle */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className={`grid grid-cols-1 ${!game.isHalftime ? 'md:grid-cols-[1fr_2fr_2fr]' : 'md:grid-cols-2'} gap-4`}>
                         {/* Halftime Toggle Button */}
-                        {!game.isHalftime ? (
+                        {!game.isHalftime && (
                             <KdaButton 
                                 onClick={() => setTriggerHalftimeOnNextScore(!triggerHalftimeOnNextScore)}
-                                className={`!py-3 ${triggerHalftimeOnNextScore 
+                                className={`!py-2 !px-3 !text-xs ${triggerHalftimeOnNextScore 
                                     ? 'bg-yellow-400 text-gray-900 border-yellow-400' 
-                                    : 'bg-yellow-400/10 border-yellow-400 text-yellow-300 hover:bg-yellow-400 hover:text-gray-900'
+                                    : 'bg-gray-700/50 border-gray-600 text-gray-400 hover:bg-gray-600 hover:text-gray-200'
                                 }`}
                             >
                                 HALF
                             </KdaButton>
-                        ) : (
-                            <div></div>
                         )}
                         
                         {/* Scoring Buttons */}
