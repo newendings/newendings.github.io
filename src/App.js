@@ -224,13 +224,25 @@ function RosterScreen({ roster, setRoster, updatePlayer, deletePlayer }) {
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm text-left">
                             <thead className="text-xs uppercase text-gray-400 tracking-wider">
-                                <tr><th className="px-6 py-3">Name</th><th className="px-6 py-3">Gender</th><th className="px-6 py-3">Line</th><th className="px-6 py-3">Role</th><th className="px-6 py-3 text-right">Actions</th></tr>
+                                <tr><th className="px-6 py-3">Name</th><th className="px-6 py-3">Gender</th><th className="px-6 py-3">Line</th><th className="px-6 py-3">Role</th><th className="px-6 py-3">Status</th><th className="px-6 py-3 text-right">Actions</th></tr>
                             </thead>
                             <tbody>
                                 {roster.map(player => (
-                                    <tr key={player.id} className="border-t border-gray-700/50 hover:bg-gray-700/50">
+                                    <tr key={player.id} className={`border-t border-gray-700/50 hover:bg-gray-700/50 ${player.inactive ? 'opacity-60' : ''}`}>
                                         <td className="px-6 py-4 font-medium">{player.name}</td>
                                         <td className="px-6 py-4">{player.gender}</td><td className="px-6 py-4">{player.line}</td><td className="px-6 py-4">{player.role}</td>
+                                        <td className="px-6 py-4">
+                                            <button 
+                                                onClick={() => updatePlayer({ ...player, inactive: !player.inactive })}
+                                                className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${
+                                                    player.inactive 
+                                                        ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30' 
+                                                        : 'bg-green-500/20 text-green-300 hover:bg-green-500/30'
+                                                }`}
+                                            >
+                                                {player.inactive ? 'Inactive' : 'Active'}
+                                            </button>
+                                        </td>
                                         <td className="px-6 py-4 flex items-center justify-end space-x-4">
                                             <button onClick={() => handleEdit(player)} className="text-gray-400 hover:text-yellow-400"><Edit size={16}/></button>
                                             <button onClick={() => deletePlayer(player.id)} className="text-gray-400 hover:text-red-400"><Trash2 size={16}/></button>
@@ -247,8 +259,11 @@ function RosterScreen({ roster, setRoster, updatePlayer, deletePlayer }) {
 }
 
 function PlayerForm({ player, onSave, onCancel, roster }) {
-    const [formData, setFormData] = useState({ name: player?.name || '', gender: player?.gender || 'MMP', line: player?.line || 'Offense', role: player?.role || 'Handler' });
-    const handleChange = (e) => { const { name, value } = e.target; setFormData(prev => ({ ...prev, [name]: value })); };
+    const [formData, setFormData] = useState({ name: player?.name || '', gender: player?.gender || 'MMP', line: player?.line || 'Offense', role: player?.role || 'Handler', inactive: player?.inactive || false });
+    const handleChange = (e) => { 
+        const { name, value, type, checked } = e.target; 
+        setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value })); 
+    };
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!formData.name) { alert("Player name cannot be empty."); return; }
@@ -265,6 +280,18 @@ function PlayerForm({ player, onSave, onCancel, roster }) {
                 <select name="line" value={formData.line} onChange={handleChange} className={inputStyle}> <option>Offense</option> <option>Defense</option> <option>Flex</option> </select>
                 <select name="role" value={formData.role} onChange={handleChange} className={inputStyle}> <option>Handler</option> <option>Cutter</option> <option>Hybrid</option> </select>
             </div>
+            <div className="flex items-center space-x-3">
+                <input 
+                    type="checkbox" 
+                    name="inactive" 
+                    checked={formData.inactive} 
+                    onChange={handleChange} 
+                    className="w-4 h-4 text-red-400 bg-gray-700 border-gray-600 rounded focus:ring-red-400 focus:ring-2"
+                />
+                <label htmlFor="inactive" className="text-sm font-medium text-gray-300">
+                    Mark as inactive (injured/unavailable)
+                </label>
+            </div>
             <div className="flex justify-end space-x-2">
                 <KdaButton type="button" onClick={onCancel} className="bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-600 hover:text-white">Cancel</KdaButton>
                 <KdaButton type="submit" className="bg-yellow-400/10 border-yellow-400 text-yellow-300 hover:bg-yellow-400 hover:text-gray-900">Save</KdaButton>
@@ -280,7 +307,7 @@ function QuickAddRoster({ onSave, onCancel }) {
         for (const key in playerInputs) {
             const [line, role, gender] = key.split('-');
             const names = playerInputs[key].split(',').map(name => name.trim()).filter(name => name.length > 0);
-            names.forEach(name => { allNewPlayers.push({ id: generateId(), name, gender, line: line.charAt(0).toUpperCase() + line.slice(1), role: role.charAt(0).toUpperCase() + role.slice(1) }); });
+            names.forEach(name => { allNewPlayers.push({ id: generateId(), name, gender, line: line.charAt(0).toUpperCase() + line.slice(1), role: role.charAt(0).toUpperCase() + role.slice(1), inactive: false }); });
         }
         onSave(allNewPlayers);
     };
@@ -440,7 +467,7 @@ function LineSelector({ point, game, onLineSet, navigateTo, onEndGame }) {
     };
 
     useEffect(() => {
-        const eligiblePlayers = game.roster.filter(p => p.line === point.startingOn || p.line === 'Flex');
+        const eligiblePlayers = game.roster.filter(p => (p.line === point.startingOn || p.line === 'Flex') && !p.inactive);
         const playersWithPlaytime = eligiblePlayers.map(p => ({ ...p, pointsPlayed: game.points.filter(pt => pt.line.some(lp => lp.id === p.id)).length })).sort((a, b) => a.pointsPlayed - b.pointsPlayed);
         const mmpPool = playersWithPlaytime.filter(p => p.gender === 'MMP');
         const fmpPool = playersWithPlaytime.filter(p => p.gender === 'FMP');
@@ -477,7 +504,7 @@ function LineSelector({ point, game, onLineSet, navigateTo, onEndGame }) {
     const getPlaytime = (playerId) => game.points.filter(pt => pt.line.some(lp => lp.id === playerId)).length;
 
     if (playerToSwap) {
-        const availableReplacements = game.roster.filter(p => !currentLine.find(onField => onField.id === p.id) && p.gender === playerToSwap.gender);
+        const availableReplacements = game.roster.filter(p => !currentLine.find(onField => onField.id === p.id) && p.gender === playerToSwap.gender && !p.inactive);
         return (
             <div className="space-y-4">
                  <h4 className="font-semibold">Swap <span className="text-cyan-400">{playerToSwap.name}</span> <span className="text-xs text-gray-500">(Played: {getPlaytime(playerToSwap.id)})</span> with:</h4>
